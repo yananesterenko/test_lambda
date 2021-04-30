@@ -1,16 +1,18 @@
 package test;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
-import com.amazonaws.services.simplesystemsmanagement.model.GetParameterResult;
-import org.apache.commons.text.StringEscapeUtils;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+
+import java.io.File;
 
 
 public class HandlerStream implements RequestHandler<Object, String> {
@@ -22,73 +24,51 @@ public class HandlerStream implements RequestHandler<Object, String> {
     public String handleRequest(Object inputStream, Context context) {
 
         boolean isEncrypted = true;
-        String parameterKey = "/app/fbk-cm/wlgdw";
+       /* String parameterKey = "/app/fbk-cm/wlgdw";
         GetParameterRequest parameterRequest = new GetParameterRequest();
         parameterRequest.withName(parameterKey).setWithDecryption(isEncrypted);
-
-
         GetParameterResult parameterResponse = ssmclient.getParameter(parameterRequest);
-
 
         System.out.println("The parameter value is " + parameterResponse.getParameter().getValue());
 
         context.getLogger().log("Input: " + inputStream);
 
-        //    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        //   PojoClass el = new PojoClass();
-//        String jsonStr = gson.toJson(parameterResponse.getParameter().getValue().replace("\n","")
-//                .replace( "\\\\", ""))
-//                .replaceAll("^\"|\"$", "");
-
         String jsonStr = parameterResponse.getParameter().getValue();
         String parameterResponseUnescape = StringEscapeUtils.unescapeJson(jsonStr);
 
-        System.out.println("The parameter value is 2 " + jsonStr);
+        System.out.println("The parameter value is 2 " + parameterResponseUnescape);
 
-        //   ObjectMapper objectMapper = new ObjectMapper();
         String username = "";
         String json = parameterResponse.getParameter().getValue();
-
-
-        //ObjectMapper objectMapper = new ObjectMapper();
-        // String unwrappedJSON = objectMapper.readValue(json, String.class);
-        //       YourClass result = objectMapper.readValue(unwrappedJSON, YourClass.class);
-
-
-//        try {
-//            JSONObject json = new JSONObject((String) new JSONParser().parse(parameterResponse.getParameter().getValue()));
-//            //String userName = json.get("username").toString();
-//        } catch (ParseException e) {
-//            System.out.println("Error : " + e.getMessage());
-//        }
-
-        //  PojoClass object = new Gson().fromJson(jsonStr, PojoClass.class);
-
-        JSONParser jsonParser = new JSONParser();
-
         try {
-            JSONObject jsonObject = (JSONObject) jsonParser.parse(jsonStr);
+            JSONObject jsonObject = (JSONObject) jsonParser.parse(parameterResponseUnescape);
             String userName = jsonObject.get("username").toString();
             String password = jsonObject.get("password").toString();
             String host = jsonObject.get("host").toString();
             String port = jsonObject.get("port").toString();
             String service = jsonObject.get("service").toString();
-            String output = "Hello, user: " + userName + " password : "+ password + " \n" + "host :  " + host +
-                "port:  "+port + "serv: " + service +"!";
+            output = "Hello,  user: " + userName + " password : " + password + " host :  " + host +
+                    " port:  " + port + " server : " + service + "!";
         } catch (ParseException e) {
             e.printStackTrace();
+            context.getLogger().log("Error : " + e.getMessage());
+
         }
+*/
+        String region = System.getenv("AWS_REGION");
+        String accesskey = System.getenv("AWS_ACCESS_KEY_ID");
+        String secret_key = System.getenv("AWS_SECRET_ACCESS_KEY");
+        System.out.println("region = " + region + "accesskey = " + accesskey + " secret_key " + secret_key);
+        String output = "";
+        JSONParser jsonParser = new JSONParser();
 
+        AWSCredentials credentials = new BasicAWSCredentials(accesskey, secret_key);
+        AmazonS3 s3 = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .build();
+        s3.putObject("lambdatest32","test_30_04.txt", "/Users/user/Document/hello.txt");
 
-//        String password = obj.get("password").toString();
-//        String host = obj.get("host").toString();
-//        String port = obj.get("port").toString();
-//        String service = obj.get("service").toString();
-//        String output = "Hello, user: " + userName + " password : "+ password + " \n" + "host :  " + host +
-//                "port:  "+port + "serv: " + service +"!";
-
-
-        String output = "test json  : " + username;
+        output = "test json  : " + output;
         return output;
     }
 

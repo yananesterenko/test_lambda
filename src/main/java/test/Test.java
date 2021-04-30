@@ -16,8 +16,6 @@ public class Test {
 
     public static void main(String[] args) {
 
-
-
         final String USAGE = "\n" +
                 "Usage:\n" +
                 "    GetParameter <paraName>\n\n" +
